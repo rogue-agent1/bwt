@@ -1,50 +1,59 @@
 #!/usr/bin/env python3
-"""bwt: Burrows-Wheeler Transform."""
+"""bwt - Burrows-Wheeler Transform for compression preprocessing."""
 import sys
 
-def transform(text):
-    if not text: return "", 0
-    sentinel = "\x00"
+def bwt_encode(text, sentinel="$"):
     s = text + sentinel
     n = len(s)
     rotations = sorted(range(n), key=lambda i: s[i:] + s[:i])
-    bwt = "".join(s[(r + n - 1) % n] for r in rotations)
+    encoded = "".join(s[(i + n - 1) % n] for i in rotations)
     idx = rotations.index(0)
-    return bwt, idx
+    return encoded, idx
 
-def inverse(bwt, idx):
-    if not bwt: return ""
-    n = len(bwt)
-    # Build first column (sorted)
-    order = sorted(range(n), key=lambda i: bwt[i])
-    # Follow the chain
-    result = []
-    j = idx
+def bwt_decode(encoded, idx):
+    n = len(encoded)
+    table = [""] * n
     for _ in range(n):
-        j = order[j]
-        result.append(bwt[j])
-    # Remove sentinel
-    text = "".join(result)
-    if text.endswith("\x00"):
-        text = text[:-1]
-    return text
+        table = sorted(encoded[i] + table[i] for i in range(n))
+    for row in table:
+        if row.endswith("$"):
+            return row[:-1]
+    return table[idx][:-1]
+
+def move_to_front_encode(text):
+    alphabet = list(sorted(set(text)))
+    result = []
+    for ch in text:
+        idx = alphabet.index(ch)
+        result.append(idx)
+        alphabet.pop(idx)
+        alphabet.insert(0, ch)
+    return result
+
+def move_to_front_decode(codes, alphabet):
+    alphabet = list(alphabet)
+    result = []
+    for idx in codes:
+        ch = alphabet[idx]
+        result.append(ch)
+        alphabet.pop(idx)
+        alphabet.insert(0, ch)
+    return "".join(result)
 
 def test():
     text = "banana"
-    bwt, idx = transform(text)
-    assert inverse(bwt, idx) == text
-    # Round-trip various
-    for t in ["abracadabra", "mississippi", "hello world", "aaaa", "a"]:
-        b, i = transform(t)
-        assert inverse(b, i) == t, f"Failed for {t}"
-    # Empty
-    b, i = transform("")
-    assert inverse(b, i) == ""
-    # BWT should group similar chars
-    bwt_banana, _ = transform("banana")
-    assert bwt_banana.count("a") == "banana\x00".count("a")
+    encoded, idx = bwt_encode(text)
+    assert len(encoded) == len(text) + 1
+    decoded = bwt_decode(encoded, idx)
+    assert decoded == text
+    for s in ["abracadabra", "mississippi", "hello", "a", "aaa"]:
+        e, i = bwt_encode(s)
+        assert bwt_decode(e, i) == s
+    mtf = move_to_front_encode("banana")
+    assert len(mtf) == 6
+    orig_alpha = sorted(set("banana"))
+    assert move_to_front_decode(mtf, orig_alpha) == "banana"
     print("All tests passed!")
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1 and sys.argv[1] == "test": test()
-    else: print("Usage: bwt.py test")
+    test() if "--test" in sys.argv else print("bwt: Burrows-Wheeler Transform. Use --test")

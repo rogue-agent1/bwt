@@ -1,11 +1,8 @@
 # bwt
 
-bwt: Burrows-Wheeler Transform.
-
-Single-file, zero-dependency Python CLI.
+bwt: Single-file Python CLI tool. Zero dependencies, Python 3.8+.
 
 ## Usage
-
 ```bash
-python3 bwt.py test
+python3 bwt.py --test
 ```
