@@ -1,8 +1,9 @@
 # bwt
 
-bwt: Single-file Python CLI tool. Zero dependencies, Python 3.8+.
+Burrows-Wheeler Transform. Zero dependencies, single file, Python 3.8+.
 
 ## Usage
+
 ```bash
-python3 bwt.py --test
+python3 bwt.py --help
 ```
