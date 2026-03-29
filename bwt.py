@@ -14,13 +14,10 @@ def transform(data):
 def inverse(bwt, idx):
     if not bwt: return b""
     n = len(bwt)
-    table = sorted(range(n), key=lambda i: bwt[i])
-    result = bytearray()
-    j = idx
+    table = [b""] * n
     for _ in range(n):
-        result.append(bwt[j])
-        j = table[j]
-    return bytes(result)
+        table = sorted([bytes([bwt[i]]) + table[i] for i in range(n)])
+    return table[idx]
 
 def transform_text(text):
     if not text: return "", 0
@@ -33,13 +30,10 @@ def transform_text(text):
 def inverse_text(bwt, idx):
     if not bwt: return ""
     n = len(bwt)
-    table = sorted(range(n), key=lambda i: bwt[i])
-    result = []
-    j = idx
+    table = [""] * n
     for _ in range(n):
-        result.append(bwt[j])
-        j = table[j]
-    return "".join(result)
+        table = sorted([bwt[i] + table[i] for i in range(n)])
+    return table[idx]
 
 if __name__ == "__main__":
     import argparse
